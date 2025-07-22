@@ -1,8 +1,13 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "newImage"
+        CONTAINER_NAME = "newImageContainer"
+    }
+
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
                 git 'https://github.com/mayankbishtt/cloudrun'
             }
@@ -11,7 +16,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("my-flask-app")
+                    echo "Building Docker image with tag: $IMAGE_NAME"
+                    sh "docker build -t $IMAGE_NAME ."
                 }
             }
         }
@@ -19,7 +25,9 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    docker.image("my-flask-app").run("-p 8080:8080")
+                    echo "Running container named: $CONTAINER_NAME"
+                    sh "docker rm -f $CONTAINER_NAME || true"
+                    sh "docker run -d -p 8080:8080 --name $CONTAINER_NAME $IMAGE_NAME"
                 }
             }
         }
